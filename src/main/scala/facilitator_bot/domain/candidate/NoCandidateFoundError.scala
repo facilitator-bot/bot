@@ -1,0 +1,3 @@
+package facilitator_bot.domain.candidate
+
+final class NoCandidateFoundError extends RuntimeException

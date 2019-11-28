@@ -1,0 +1,19 @@
+{
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "name",
+      "AttributeType": "S"
+    }
+  ],
+  "TableName": "candidates",
+  "KeySchema": [
+    {
+      "AttributeName": "name",
+      "KeyType": "HASH"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 5,
+    "WriteCapacityUnits": 5
+  }
+}

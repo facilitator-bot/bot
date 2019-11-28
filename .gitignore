@@ -1,0 +1,21 @@
+*.class
+*.log
+
+# sbt specific
+.cache
+.history
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+.idea
+
+# Serverless directories
+.serverless
+env.yaml
+
+conf/*.yml
+src/main/resources/seed.json
