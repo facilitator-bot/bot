@@ -25,7 +25,8 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "net.logstash.logback" % "logstash-logback-encoder" % "5.3",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.9.8",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+  "com.slack.api" % "bolt-aws-lambda" % "1.0.1"
 )
 
 //compile options

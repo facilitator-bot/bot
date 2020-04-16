@@ -22,22 +22,25 @@ provider:
         - dynamodb:UpdateItem
       Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.${self:provider.stage}.ddb_candidates_table}
       Effect: Allow
-  environment:
-    slack_incomingWebHook: ${self:custom.${self:provider.stage}.slack_incomingWebHook}
-    ddb_candidates_table: ${self:custom.${self:provider.stage}.ddb_candidates_table}
 custom:
-  dev: ${file(./conf/stg.yml)}
-  stg: ${file(./conf/stg.yml)}
+  dev:
+    ddb_candidates_table: ${env:ddb_candidates_table}
+  stg:
+    ddb_candidates_table: facilitator-bot-candidates
 
 package:
   artifact: target/scala-2.12/facilitator_bot.jar
 
 functions:
   remind_facilitator:
-    handler: facilitator_bot.Handler
+    handler: facilitator_bot.CronHandler
     events:
       - schedule: cron(25 1 ? * MON-FRI *)
         enabled: true
+  skip_command:
+    handler: facilitator_bot.CommandHandler
+    events:
+    - http: POST skip
 resources:
   Resources:
     CandidateTable:
@@ -53,3 +56,5 @@ resources:
             KeyType: HASH
         SSESpecification:
           SSEEnabled: true
+plugins:
+  - serverless-pseudo-parameters
