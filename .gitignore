@@ -19,3 +19,7 @@ env.yaml
 
 conf/*.yml
 src/main/resources/seed.json
+.env
+.envrc
+.sbtopts
+src/main/resources/seeds.json
