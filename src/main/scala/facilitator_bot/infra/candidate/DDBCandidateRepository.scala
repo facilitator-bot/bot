@@ -52,6 +52,10 @@ class DDBCandidateRepository[F[_]: Effect](implicit config: Config)
           "lastActAt" -> AttributeValue
             .builder()
             .n(candidate.lastActAt.toString)
+            .build(),
+          "slackUserId" -> AttributeValue
+            .builder()
+            .s(candidate.slackUserId)
             .build()
         )
       )
@@ -68,7 +72,8 @@ class DDBCandidateRepository[F[_]: Effect](implicit config: Config)
               items.map { item =>
                 Candidate(
                   item("name").s(),
-                  item("lastActAt").n().toLong
+                  item("lastActAt").n().toLong,
+                  item("slackUserId").s()
                 )
               }.toList)
             .fold(List.empty[Candidate])(identity)
