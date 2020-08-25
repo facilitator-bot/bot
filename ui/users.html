@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Elm + Websockets</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <link href="./users.css" rel="stylesheet">
+  <script type="text/javascript" src="elm.js"></script>
+</head>
+
+<body>
+    <div class="container">
+      <div id="myapp"></div>
+    </div>
+</body>
+
+<script type="text/javascript">
+
+// Start the Elm application.
+var app = Elm.Main.init({
+    node: document.getElementById('myapp')
+});
+
+
+app.ports.sendMessage.subscribe(function() {
+  app.ports.messageReceiver.send([
+    {name: "A", lastAccAt: "B", slackId: "C"}
+  ]);
+});
+
+
+// If you want to use a JavaScript library to manage your WebSocket
+// connection, replace the code in JS with the alternate implementation.
+</script>
+
+</html>
