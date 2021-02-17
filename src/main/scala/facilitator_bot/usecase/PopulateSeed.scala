@@ -4,9 +4,8 @@ import cats.effect.Effect
 import cats.implicits._
 import facilitator_bot.domain.candidate.{Candidate, CandidateRepository}
 import io.circe.parser._
-
+import io.circe.generic.auto._
 import scala.io.Source
-import scala.language.higherKinds
 
 class PopulateSeed[F[_]: Effect](
     implicit candidateRepository: CandidateRepository[F]) {

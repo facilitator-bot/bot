@@ -29,7 +29,7 @@ custom:
     ddb_candidates_table: facilitator-bot-candidates
 
 package:
-  artifact: target/scala-2.12/facilitator_bot.jar
+  artifact: target/scala-2.13/facilitator_bot.jar
 
 functions:
   remind_facilitator:

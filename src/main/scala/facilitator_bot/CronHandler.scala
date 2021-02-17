@@ -6,6 +6,7 @@ import facilitator_bot.domain.reminder.FacilitatorRemind
 import facilitator_bot.infra.lambda.vo._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
+import scala.concurrent.ExecutionContext.Implicits.{global => implicitEC}
 
 class CronHandler extends RequestHandler[Request, Response] with LazyLogging {
   private val components: Components[Task] = new Components[Task]
