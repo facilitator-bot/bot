@@ -13,11 +13,6 @@ libraryDependencies ++= Seq(
 ).map(_ % circeVersion)
 
 libraryDependencies ++= Seq(
-  "com.amazonaws" % "aws-lambda-java-events" % "1.3.0",
-  "com.amazonaws" % "aws-lambda-java-core" % "1.1.0",
-  "com.pepegar" %% "hammock-core" % "0.10.0",
-  "com.pepegar" %% "hammock-apache-http" % "0.10.0",
-  "com.pepegar" %% "hammock-circe" % "0.10.0",
   "io.monix" %% "monix-eval" % "3.0.0",
   "com.github.j5ik2o" %% "reactive-aws-dynamodb-core" % reactiveAwsVersion,
   "com.github.j5ik2o" %% "reactive-aws-dynamodb-cats" % reactiveAwsVersion,
@@ -29,10 +24,13 @@ libraryDependencies ++= Seq(
   "com.slack.api" % "bolt-aws-lambda" % "1.0.1"
 )
 
+unusedCompileDependenciesFilter -= moduleFilter("ch.qos.logback", "logback-classic")
+unusedCompileDependenciesFilter -= moduleFilter("com.fasterxml.jackson.module", "jackson-module-scala")
+unusedCompileDependenciesFilter -= moduleFilter("com.github.pureconfig", "pureconfig")
+unusedCompileDependenciesFilter -= moduleFilter("net.logstash.logback" , "logstash-logback-encoder")
+
 //compile options
-
 wartremoverErrors ++= Warts.unsafe
-
 addCompilerPlugin(
   "org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full
 )
