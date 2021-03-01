@@ -21,8 +21,10 @@ libraryDependencies ++= Seq(
   "net.logstash.logback" % "logstash-logback-encoder" % "6.6",
   "com.github.pureconfig" %% "pureconfig" % "0.14.0",
   "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1",
-  "com.slack.api" % "bolt-aws-lambda" % "1.6.1"
+  "com.slack.api" % "bolt-aws-lambda" % "1.6.1",
+  "io.7mind.izumi" %% "distage-core" % "1.0.3"
 )
+
 
 unusedCompileDependenciesFilter -= moduleFilter("ch.qos.logback", "logback-classic")
 unusedCompileDependenciesFilter -= moduleFilter("com.fasterxml.jackson.module", "jackson-module-scala")
