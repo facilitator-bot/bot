@@ -1,27 +1,32 @@
 service: facilitator-bot
-frameworkVersion: "=1.21.1"
-
+frameworkVersion: "^2.25.1"
+useDotenv: true
 provider:
   name: aws
   runtime: java8
   stage: ${opt:stage}
   region: ap-northeast-1
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - logs:CreateLogGroup
-        - logs:CreateLogStream
-        - logs:PutLogEvents
-      Resource: '*'
-    - Action:
-        - dynamodb:GetItem
-        - dynamodb:GetRecords
-        - dynamodb:PutItem
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:UpdateItem
-      Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.${self:provider.stage}.ddb_candidates_table}
-      Effect: Allow
+  lambdaHashingVersion: "20201221"
+  apiGateway:
+    shouldStartNameWithService: true
+  iam:
+    role:
+      statements:
+      - Effect: Allow
+        Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+        Resource: '*'
+      - Action:
+          - dynamodb:GetItem
+          - dynamodb:GetRecords
+          - dynamodb:PutItem
+          - dynamodb:Query
+          - dynamodb:Scan
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.${self:provider.stage}.ddb_candidates_table}
+        Effect: Allow
 custom:
   dev:
     ddb_candidates_table: ${env:ddb_candidates_table}
@@ -29,18 +34,19 @@ custom:
     ddb_candidates_table: facilitator-bot-candidates
 
 package:
-  artifact: target/scala-2.12/facilitator_bot.jar
+  artifact: target/scala-2.13/facilitator_bot.jar
 
 functions:
   remind_facilitator:
     handler: facilitator_bot.CronHandler
     events:
-      - schedule: cron(25 1 ? * MON-FRI *)
-        enabled: true
+      - schedule:
+          rate: cron(25 1 ? * MON-FRI *)
+          enabled: true
   skip_command:
     handler: facilitator_bot.CommandHandler
     events:
-    - http: POST skip
+    - http: POST /skip
 resources:
   Resources:
     CandidateTable:

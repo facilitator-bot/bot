@@ -14,9 +14,9 @@ import facilitator_bot.usecase.{
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 
-import scala.language.higherKinds
+import scala.concurrent.ExecutionContext
 
-class Components[F[_]: Effect] {
+class Components[F[_]: Effect](implicit ec: ExecutionContext) {
   private implicit val ddbConfig: Config =
     ConfigSource.default.at("ddb").loadOrThrow[Config]
 

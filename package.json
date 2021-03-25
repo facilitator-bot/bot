@@ -1,0 +1,11 @@
+{
+  "name": "facilitator-rotate-bot",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serverless": "^2.31.0",
+    "serverless-pseudo-parameters": "^2.5.0"
+  }
+}

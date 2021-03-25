@@ -1,7 +1,6 @@
 package facilitator_bot.infra.candidate
 
 import java.util.concurrent.CompletionException
-
 import cats.effect.{Effect, IO}
 import cats.implicits._
 import com.github.j5ik2o.reactive.aws.dynamodb.DynamoDbAsyncClient
@@ -23,9 +22,10 @@ import software.amazon.awssdk.services.dynamodb.{
   DynamoDbAsyncClient => JavaDynamoDbAsyncClient
 }
 
-import scala.language.higherKinds
+import scala.concurrent.ExecutionContext
 
-class DDBCandidateRepository[F[_]: Effect](implicit config: Config)
+class DDBCandidateRepository[F[_]: Effect](implicit config: Config,
+                                           ec: ExecutionContext)
     extends CandidateRepository[F] {
 
   private val client = DynamoDbCatsIOClient(
@@ -103,6 +103,7 @@ class DDBCandidateRepository[F[_]: Effect](implicit config: Config)
 
 object DDBCandidateRepository {
   implicit def onDDB[F[_]: Effect](
-      implicit config: Config): CandidateRepository[F] =
+      implicit config: Config,
+      ec: ExecutionContext): CandidateRepository[F] =
     new DDBCandidateRepository[F]
 }

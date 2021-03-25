@@ -10,8 +10,6 @@ import facilitator_bot.domain.candidate.{
   NoCandidateFoundError
 }
 
-import scala.language.higherKinds
-
 class ChooseFacilitator[F[_]: Effect](
     implicit candidateRepository: CandidateRepository[F]
 ) {
