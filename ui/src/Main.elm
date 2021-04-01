@@ -10,6 +10,7 @@ import Html.Events exposing (onInput)
 
 ---- MODEL ----
 
+type alias Flags = CandidateList
 
 type alias Candidate =
     { lastActAt : Int
@@ -34,16 +35,16 @@ type alias Model =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( { candidates =
-            [ { name = "ニャン助", slackUserId = "1234", lastActAt = 1234 }
-            , { name = "てんこ", slackUserId = "5678", lastActAt = 1234 }
-            , { name = "カヌレ", slackUserId = "9999", lastActAt = 1234 }
-            , { name = "あん", slackUserId = "1111", lastActAt = 1234 }
-            , { name = "つぶ", slackUserId = "333", lastActAt = 1234 }
-            , { name = "パトラ", slackUserId = "4444", lastActAt = 1234 }
-            ]
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    ( { candidates = flags
+            -- [ { name = "ニャン助", slackUserId = "1234", lastActAt = 1234 }
+            -- , { name = "てんこ", slackUserId = "5678", lastActAt = 1234 }
+            -- , { name = "カヌレ", slackUserId = "9999", lastActAt = 1234 }
+            -- , { name = "あん", slackUserId = "1111", lastActAt = 1234 }
+            -- , { name = "つぶ", slackUserId = "333", lastActAt = 1234 }
+            -- , { name = "パトラ", slackUserId = "4444", lastActAt = 1234 }
+            -- ]
       , selectedCandidate = Nothing
       }
     , Cmd.none
@@ -169,11 +170,11 @@ editCandidateForm candidate =
 ---- PROGRAM ----
 
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
     Browser.element
         { view = view
-        , init = \_ -> init
+        , init = init
         , update = update
         , subscriptions = always Sub.none
         }

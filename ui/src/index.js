@@ -1,6 +1,11 @@
 import './main.css';
 import { Elm } from './Main.elm';
 import * as serviceWorker from './serviceWorker';
+import { fromCognitoIdentityPool } from '@aws-sdk/credential-provider-cognito-identity';
+import { CognitoIdentityClient } from '@aws-sdk/client-cognito-identity';
+import * as AWS from '@aws-sdk/client-dynamodb';
+
+// authorize, then get access token
 gapi.load('client:auth2', async function () {
   await gapi.client.init({
     'apiKey': process.env.ELM_APP_GOOGLE_API_KEY,
@@ -9,14 +14,54 @@ gapi.load('client:auth2', async function () {
   });
   const auth = gapi.auth2.getAuthInstance();
   const result = await auth.signIn();
-  result.getAuthResponse().access_token;
-  Elm.Main.init({
-    node: document.getElementById('root')
+  // Initialize the Amazon Cognito credentials provider
+  const credentials = fromCognitoIdentityPool({
+    identityPoolId: process.env.ELM_APP_COGNITO_ID_POOL_ID,
+    logins: {
+      'accounts.google.com': result.getAuthResponse().id_token
+    },
+    client: new CognitoIdentityClient({
+      region: process.env.ELM_APP_COGNITO_REGION,
+    })
   });
+
+  async function getCandidates() {
+    const response = await client.scan({
+      TableName: process.env.ELM_APP_DDB_TABLE_NAME,
+      ConsistentRead: true
+    });
+    return response.Items.map(item =>
+      Object.fromEntries(
+        Object.entries(item).map(([k, v]) => 
+          [
+            k,
+            v['N'] ? parseInt(v['N']): v['S']
+          ]
+         )
+      )
+    );
+  }
+
+  //create ddb client
+  const client = new AWS.DynamoDB({
+    region: process.env.ELM_APP_COGNITO_REGION, credentials
+  });
+  // start elm app with candidates as initial values
+  const app = Elm.Main.init({
+    node: document.getElementById('root'),
+    flags: await getCandidates()
+  });
+
+  // //setup ports
+  // //`GetCandidates` request from app
+  // app.ports.sendGetCandidateRequest.subscribe(async function () {
+  //   //read candidates from table
+  //   const candidates = await getCandidates();
+  //   //then send it back to app
+  //   app.ports.receiveCandidateResponse.send(candidates);
+  // });
+
 });
-
-
-
 
 
 // If you want your app to work offline and load faster, you can change
