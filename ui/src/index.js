@@ -42,6 +42,17 @@ gapi.load('client:auth2', async function () {
     );
   }
 
+  async function updateCandidate(candidate) {
+   return await client.putItem({
+      TableName: process.env.ELM_APP_DDB_TABLE_NAME,
+      Item: {
+        'name': { S: candidate.name },
+        'lastActAt': { N: String(candidate.lastActAt) },
+        'slackUserId': { S: candidate.slackUserId },
+      }
+    });
+  }
+
   //create ddb client
   const client = new AWS.DynamoDB({
     region: process.env.ELM_APP_COGNITO_REGION, credentials
@@ -52,14 +63,15 @@ gapi.load('client:auth2', async function () {
     flags: await getCandidates()
   });
 
-  // //setup ports
-  // //`GetCandidates` request from app
-  // app.ports.sendGetCandidateRequest.subscribe(async function () {
-  //   //read candidates from table
-  //   const candidates = await getCandidates();
-  //   //then send it back to app
-  //   app.ports.receiveCandidateResponse.send(candidates);
-  // });
+  //setup ports
+
+  //update candidate
+  app.ports.sendUpdateCandidateRequest.subscribe(async function (candidate) {
+    await updateCandidate(candidate);
+    const candidates = await getCandidates();
+    //then send it back to app
+    app.ports.receiveUpdateCandidateResponse.send(candidates);
+  });
 
 });
 

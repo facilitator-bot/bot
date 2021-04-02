@@ -1,16 +1,18 @@
-module Main exposing (..)
+port module Main exposing (receiveUpdateCandidateResponse, sendUpdateCandidateRequest)
 
 import Browser
 import Html exposing (Html, a, button, div, form, h1, img, input, label, p, table, td, text, th, thead, tr)
 import Html.Attributes exposing (class, href, readonly, src, type_, value)
-import Html.Events exposing (onClick)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onClick, onInput)
 
 
 
 ---- MODEL ----
 
-type alias Flags = CandidateList
+
+type alias Flags =
+    CandidateList
+
 
 type alias Candidate =
     { lastActAt : Int
@@ -37,14 +39,7 @@ type alias Model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { candidates = flags
-            -- [ { name = "ニャン助", slackUserId = "1234", lastActAt = 1234 }
-            -- , { name = "てんこ", slackUserId = "5678", lastActAt = 1234 }
-            -- , { name = "カヌレ", slackUserId = "9999", lastActAt = 1234 }
-            -- , { name = "あん", slackUserId = "1111", lastActAt = 1234 }
-            -- , { name = "つぶ", slackUserId = "333", lastActAt = 1234 }
-            -- , { name = "パトラ", slackUserId = "4444", lastActAt = 1234 }
-            -- ]
+    ( { candidates = List.sortBy .lastActAt flags
       , selectedCandidate = Nothing
       }
     , Cmd.none
@@ -58,8 +53,9 @@ init flags =
 type Msg
     = NoOp
     | SelectCandidate Candidate
-    | SaveSelectedCandidate
+    | SaveSelectedCandidate Candidate
     | EditLastActAt EditingCandidate String
+    | SetCandidateList CandidateList
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -68,40 +64,45 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+        -- リストからユーザー選択
         SelectCandidate c ->
             ( { model | selectedCandidate = Just { selectedCandidate = c, newLastActAt = c.lastActAt } }, Cmd.none )
 
-        EditLastActAt editing newLastActAt -> ({model | selectedCandidate = Just <| editCandidate editing newLastActAt}, Cmd.none)
-        SaveSelectedCandidate ->
-            ( updateCandidate model, Cmd.none )
+        -- 編集操作
+        EditLastActAt editing newLastActAt ->
+            ( { model | selectedCandidate = Just <| editCandidate editing newLastActAt }
+            , Cmd.none
+            )
 
-editCandidate: EditingCandidate -> String -> EditingCandidate
-editCandidate candidate newLastActAt = case String.toInt newLastActAt of 
-    Just c -> {candidate | newLastActAt = c}
-    Nothing -> candidate
+        -- 一覧更新
+        SetCandidateList cs ->
+            ( { model | candidates = List.sortBy .lastActAt cs }, Cmd.none )
 
-updateCandidate : Model -> Model
-updateCandidate model =
-    case model.selectedCandidate of
-        Just candidate ->
-            { model | candidates = updateLastActAt model.candidates candidate }
+        -- 保存
+        SaveSelectedCandidate _ ->
+            case model.selectedCandidate of
+                -- 手元のリストを更新して、更新リクエストを送信する
+                Just c ->
+                    ( model
+                    , sendUpdateCandidateRequest
+                        { name = c.selectedCandidate.name
+                        , slackUserId = c.selectedCandidate.slackUserId
+                        , lastActAt = c.newLastActAt
+                        }
+                    )
 
-        _ ->
-            model
+                Nothing ->
+                    ( model, Cmd.none )
 
 
-updateLastActAt : CandidateList -> EditingCandidate -> CandidateList
-updateLastActAt candidates editing =
-    List.foldl
-        (\c cs ->
-            if c.name == editing.selectedCandidate.name then
-                cs ++ [{ c | lastActAt = editing.newLastActAt }]
+editCandidate : EditingCandidate -> String -> EditingCandidate
+editCandidate candidate newLastActAt =
+    case String.toInt newLastActAt of
+        Just c ->
+            { candidate | newLastActAt = c }
 
-            else
-                cs ++ [c]
-        )
-        []
-        candidates
+        Nothing ->
+            candidate
 
 
 
@@ -153,17 +154,33 @@ editCandidateForm candidate =
                     ]
                 , p []
                     [ label [] [ text "lastActAt" ]
-                    , input [ onInput (\s -> EditLastActAt c s) , value <| String.fromInt <| c.newLastActAt, type_ "number" ] []
+                    , input [ onInput (\s -> EditLastActAt c s), value <| String.fromInt <| c.newLastActAt, type_ "number" ] []
                     ]
                 , p []
                     [ label [] [ text "slackUserId" ]
                     , input [ value c.selectedCandidate.slackUserId, readonly True ] []
                     ]
-                , button [ onClick SaveSelectedCandidate, class "btn btn-primary" ] [ text "Save" ]
+                , button [ onClick (SaveSelectedCandidate c.selectedCandidate), class "btn btn-primary" ] [ text "Save" ]
                 ]
 
         Nothing ->
             div [] [ text "Empty" ]
+
+
+
+---- PORTS ----
+-- Update Candidate
+
+
+port sendUpdateCandidateRequest : Candidate -> Cmd msg
+
+
+port receiveUpdateCandidateResponse : (CandidateList -> msg) -> Sub msg
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    receiveUpdateCandidateResponse SetCandidateList
 
 
 
@@ -176,5 +193,5 @@ main =
         { view = view
         , init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
