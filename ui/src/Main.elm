@@ -34,13 +34,16 @@ type alias CandidateList =
 type alias Model =
     { candidates : CandidateList
     , selectedCandidate : Maybe EditingCandidate
+    , infoMsg: Maybe String
     }
 
+type alias HasInfoMsg a = { a | infoMsg: Maybe String }
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     ( { candidates = List.sortBy .lastActAt flags
       , selectedCandidate = Nothing
+      , infoMsg = Nothing
       }
     , Cmd.none
     )
@@ -56,6 +59,8 @@ type Msg
     | SaveSelectedCandidate Candidate
     | EditLastActAt EditingCandidate String
     | SetCandidateList CandidateList
+    | ShowUpdatedCandidateList CandidateList
+    | DismissInfoMsg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -76,8 +81,9 @@ update msg model =
 
         -- 一覧更新
         SetCandidateList cs ->
-            ( { model | candidates = List.sortBy .lastActAt cs }, Cmd.none )
-
+            ( { model | candidates = sortCandidateList cs }, Cmd.none )
+        -- 更新完了
+        ShowUpdatedCandidateList cs -> ( { model | candidates = sortCandidateList cs, infoMsg = Just "Saved!!" }, Cmd.none )
         -- 保存
         SaveSelectedCandidate _ ->
             case model.selectedCandidate of
@@ -93,7 +99,8 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
-
+        -- メッセージ非表示
+        DismissInfoMsg -> ({model | infoMsg = Nothing}, Cmd.none)
 
 editCandidate : EditingCandidate -> String -> EditingCandidate
 editCandidate candidate newLastActAt =
@@ -104,6 +111,8 @@ editCandidate candidate newLastActAt =
         Nothing ->
             candidate
 
+sortCandidateList: CandidateList -> CandidateList
+sortCandidateList cs = List.sortBy .lastActAt cs
 
 
 ---- VIEW ----
@@ -118,6 +127,7 @@ view model =
                 ]
             ]
         , candidatesTable model.candidates
+        , infoAlert model
         , editCandidateForm model.selectedCandidate
         ]
 
@@ -172,6 +182,14 @@ formCard elm =
             ]
         ]
 
+infoAlert : HasInfoMsg a -> Html Msg
+infoAlert msg = case msg.infoMsg of
+   Just m -> div [class "alert alert-success alert-dismissable"] [
+       Html.strong [] [text m]
+       , Html.button [onClick DismissInfoMsg ,type_ "button", class "close"] [Html.span [] [text "×"]]
+       ]
+   Nothing-> div [] []
+
 
 
 ---- PORTS ----
@@ -186,7 +204,7 @@ port receiveUpdateCandidateResponse : (CandidateList -> msg) -> Sub msg
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    receiveUpdateCandidateResponse SetCandidateList
+    receiveUpdateCandidateResponse ShowUpdatedCandidateList
 
 
 
