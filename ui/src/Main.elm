@@ -1,8 +1,8 @@
 port module Main exposing (receiveUpdateCandidateResponse, sendUpdateCandidateRequest)
 
 import Browser
-import Html exposing (Html, a, button, div, form, h1, img, input, label, p, table, td, text, th, thead, tr)
-import Html.Attributes exposing (class, href, readonly, src, type_, value)
+import Html exposing (Html, a, div, h1, input, table, tbody, td, text, th, thead, tr)
+import Html.Attributes exposing (class, disabled, href, scope, type_, value)
 import Html.Events exposing (onClick, onInput)
 
 
@@ -111,9 +111,12 @@ editCandidate candidate newLastActAt =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working!" ]
+    div [ class "container" ]
+        [ div [ class "jumbotron jumbotron-fluid" ]
+            [ div [ class "container" ]
+                [ h1 [ class "display-4" ] [ text "facilitator bot admin UI" ]
+                ]
+            ]
         , candidatesTable model.candidates
         , editCandidateForm model.selectedCandidate
         ]
@@ -121,23 +124,22 @@ view model =
 
 candidatesTable : CandidateList -> Html Msg
 candidatesTable candidates =
-    table [ class "table" ]
-        (List.concat
-            [ [ thead []
-                    [ th [] [ text "name" ]
-                    , th [] [ text "slackUserId" ]
-                    , th [] [ text "lastActAt" ]
-                    ]
-              ]
-            , List.map candidateTableRow candidates
+    div [ class "table-responsive" ]
+        [ table [ class "table table-bordered table-hover table-sm" ]
+            [ thead []
+                [ th [ scope "col" ] [ text "name" ]
+                , th [ scope "col" ] [ text "slackUserId" ]
+                , th [ scope "col" ] [ text "lastActAt" ]
+                ]
+            , tbody [] <| List.map candidateTableRow candidates
             ]
-        )
+        ]
 
 
 candidateTableRow : Candidate -> Html Msg
 candidateTableRow candidate =
     tr []
-        [ td [] [ a [ href "#", onClick (SelectCandidate candidate) ] [ text candidate.name ] ]
+        [ th [ scope "row" ] [ a [ href "#", onClick (SelectCandidate candidate) ] [ text candidate.name ] ]
         , td [] [ text candidate.slackUserId ]
         , td [] [ text <| String.fromInt <| candidate.lastActAt ]
         ]
@@ -147,24 +149,28 @@ editCandidateForm : Maybe EditingCandidate -> Html Msg
 editCandidateForm candidate =
     case candidate of
         Just c ->
-            div [ class "form" ]
-                [ p []
-                    [ label [] [ text "Name" ]
-                    , input [ value c.selectedCandidate.name, readonly True ] []
+            formCard <|
+                Html.form []
+                    [ div [ class "form-row" ]
+                        [ div [ class "col-sm-3" ] [ input [ value c.selectedCandidate.name, disabled True, class "form-control" ] [] ]
+                        , div [ class "col-sm-3" ] [ input [ class "form-control", value c.selectedCandidate.slackUserId, disabled True ] [] ]
+                        , div [ class "col-sm-3" ] [ input [ class "form-control", onInput (\s -> EditLastActAt c s), value <| String.fromInt <| c.newLastActAt, type_ "number" ] [] ]
+                        , div [ class "col-sm-3" ] [ input [ type_ "button", onClick (SaveSelectedCandidate c.selectedCandidate), class "btn btn-primary", value "Save" ] [] ]
+                        ]
                     ]
-                , p []
-                    [ label [] [ text "lastActAt" ]
-                    , input [ onInput (\s -> EditLastActAt c s), value <| String.fromInt <| c.newLastActAt, type_ "number" ] []
-                    ]
-                , p []
-                    [ label [] [ text "slackUserId" ]
-                    , input [ value c.selectedCandidate.slackUserId, readonly True ] []
-                    ]
-                , button [ onClick (SaveSelectedCandidate c.selectedCandidate), class "btn btn-primary" ] [ text "Save" ]
-                ]
 
         Nothing ->
-            div [] [ text "Empty" ]
+            formCard <| text "Choose user from the table above."
+
+
+formCard : Html a -> Html a
+formCard elm =
+    div [ class "card" ]
+        [ div [ class "card-body" ]
+            [ Html.h5 [ class "card-title" ] [ text "Edit users" ]
+            , elm
+            ]
+        ]
 
 
 
