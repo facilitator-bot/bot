@@ -67,10 +67,14 @@ gapi.load('client:auth2', async function () {
 
   //update candidate
   app.ports.sendUpdateCandidateRequest.subscribe(async function (candidate) {
-    await updateCandidate(candidate);
-    const candidates = await getCandidates();
-    //then send it back to app
-    app.ports.receiveUpdateCandidateResponse.send(candidates);
+    try {
+      await updateCandidate(candidate)
+      const candidates = await getCandidates()
+      //then send it back to app
+      app.ports.receiveUpdateCandidateResponse.send({ candidates, error: null });
+    } catch (e) {
+      app.ports.receiveUpdateCandidateResponse.send({ candidates: null, error: e.message });
+     }
   });
 
 });

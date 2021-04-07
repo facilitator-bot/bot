@@ -34,16 +34,32 @@ type alias CandidateList =
 type alias Model =
     { candidates : CandidateList
     , selectedCandidate : Maybe EditingCandidate
-    , infoMsg: Maybe String
+    , alertMsg : Maybe String
+    , alertLevel : Maybe MsgLevel
     }
 
-type alias HasInfoMsg a = { a | infoMsg: Maybe String }
+
+type MsgLevel
+    = Error
+    | Info
+
+
+type alias HasAlertMsg a =
+    { a | alertMsg : Maybe String, alertLevel : Maybe MsgLevel }
+
+
+type alias UpdateCandidateResponse =
+    { candidates : Maybe CandidateList
+    , error : Maybe String
+    }
+
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     ( { candidates = List.sortBy .lastActAt flags
       , selectedCandidate = Nothing
-      , infoMsg = Nothing
+      , alertMsg = Nothing
+      , alertLevel = Nothing
       }
     , Cmd.none
     )
@@ -59,7 +75,7 @@ type Msg
     | SaveSelectedCandidate Candidate
     | EditLastActAt EditingCandidate String
     | SetCandidateList CandidateList
-    | ShowUpdatedCandidateList CandidateList
+    | ShowUpdatedCandidateList UpdateCandidateResponse
     | DismissInfoMsg
 
 
@@ -82,14 +98,23 @@ update msg model =
         -- 一覧更新
         SetCandidateList cs ->
             ( { model | candidates = sortCandidateList cs }, Cmd.none )
+
         -- 更新完了
-        ShowUpdatedCandidateList cs -> ( { model | candidates = sortCandidateList cs, infoMsg = Just "Saved!!" }, Cmd.none )
+        ShowUpdatedCandidateList res ->
+            ( { model
+                | candidates = Maybe.withDefault [] <| Maybe.map sortCandidateList res.candidates
+                , alertMsg = Just <| Maybe.withDefault "Saved!!" res.error
+                , alertLevel = Just <| Maybe.withDefault Info <| Maybe.map (\_ -> Error) res.error
+              }
+            , Cmd.none
+            )
+
         -- 保存
         SaveSelectedCandidate _ ->
             case model.selectedCandidate of
                 -- 手元のリストを更新して、更新リクエストを送信する
                 Just c ->
-                    ( model
+                    ( { model | alertMsg = Nothing, alertLevel = Nothing }
                     , sendUpdateCandidateRequest
                         { name = c.selectedCandidate.name
                         , slackUserId = c.selectedCandidate.slackUserId
@@ -99,8 +124,11 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
+
         -- メッセージ非表示
-        DismissInfoMsg -> ({model | infoMsg = Nothing}, Cmd.none)
+        DismissInfoMsg ->
+            ( { model | alertMsg = Nothing, alertLevel = Nothing }, Cmd.none )
+
 
 editCandidate : EditingCandidate -> String -> EditingCandidate
 editCandidate candidate newLastActAt =
@@ -111,8 +139,11 @@ editCandidate candidate newLastActAt =
         Nothing ->
             candidate
 
-sortCandidateList: CandidateList -> CandidateList
-sortCandidateList cs = List.sortBy .lastActAt cs
+
+sortCandidateList : CandidateList -> CandidateList
+sortCandidateList cs =
+    List.sortBy .lastActAt cs
+
 
 
 ---- VIEW ----
@@ -127,7 +158,7 @@ view model =
                 ]
             ]
         , candidatesTable model.candidates
-        , infoAlert model
+        , showAlert model
         , editCandidateForm model.selectedCandidate
         ]
 
@@ -182,13 +213,29 @@ formCard elm =
             ]
         ]
 
-infoAlert : HasInfoMsg a -> Html Msg
-infoAlert msg = case msg.infoMsg of
-   Just m -> div [class "alert alert-success alert-dismissable"] [
-       Html.strong [] [text m]
-       , Html.button [onClick DismissInfoMsg ,type_ "button", class "close"] [Html.span [] [text "×"]]
-       ]
-   Nothing-> div [] []
+
+showAlert : HasAlertMsg a -> Html Msg
+showAlert msg =
+    let
+        level =
+            case msg.alertLevel of
+                Just Error ->
+                    "alert-danger"
+
+                _ ->
+                    "alert-success"
+    in
+    case msg.alertMsg of
+        Just m ->
+            div [ class <| "alert alert-dismissable " ++ level ]
+                [ Html.strong [] [ text m ]
+                , Html.button [ onClick DismissInfoMsg, type_ "button", class "close" ]
+                    [ Html.span [] [ text "×" ]
+                    ]
+                ]
+
+        Nothing ->
+            div [] []
 
 
 
@@ -199,7 +246,7 @@ infoAlert msg = case msg.infoMsg of
 port sendUpdateCandidateRequest : Candidate -> Cmd msg
 
 
-port receiveUpdateCandidateResponse : (CandidateList -> msg) -> Sub msg
+port receiveUpdateCandidateResponse : (UpdateCandidateResponse -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
