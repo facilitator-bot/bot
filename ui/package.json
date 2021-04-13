@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "format": "elm-format src/Main.elm"
+    "format": "elm-format src/Main.elm",
+    "build": "elm-app build"
   },
   "devDependencies": {
     "create-elm-app": "^5.22.0",
