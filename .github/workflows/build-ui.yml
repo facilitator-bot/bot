@@ -40,4 +40,4 @@ jobs:
         with:
           name: ui-assets
           path: |
-            dist
+            ui/dist
