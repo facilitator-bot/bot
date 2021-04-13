@@ -1,0 +1,21 @@
+{
+  "name": "ui",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "format": "elm-format src/Main.elm",
+    "build": "elm-app build"
+  },
+  "devDependencies": {
+    "create-elm-app": "^5.22.0",
+    "elm": "^0.19.1-5",
+    "elm-format": "^0.8.5",
+    "elm-test": "^0.19.1-revision6"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.10.0",
+    "@aws-sdk/credential-provider-cognito-identity": "^3.10.0",
+    "@aws-sdk/client-dynamodb": "^3.10.0"
+  }
+}
