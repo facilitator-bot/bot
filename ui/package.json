@@ -14,7 +14,7 @@
     "elm-test": "^0.19.1-revision6"
   },
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.10.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.41.0",
     "@aws-sdk/credential-provider-cognito-identity": "^3.10.0",
     "@aws-sdk/client-dynamodb": "^3.10.0"
   }
