@@ -1,9 +1,10 @@
 service: facilitator-bot
-frameworkVersion: "^2.25.1"
+frameworkVersion: "^3.7.1"
+variablesResolutionMode: 20210326
 useDotenv: true
 provider:
   name: aws
-  runtime: java8
+  runtime: nodejs14.x
   stage: ${opt:stage}
   region: ap-northeast-1
   lambdaHashingVersion: "20201221"
@@ -12,41 +13,56 @@ provider:
   iam:
     role:
       statements:
-      - Effect: Allow
-        Action:
-          - logs:CreateLogGroup
-          - logs:CreateLogStream
-          - logs:PutLogEvents
-        Resource: '*'
-      - Action:
-          - dynamodb:GetItem
-          - dynamodb:GetRecords
-          - dynamodb:PutItem
-          - dynamodb:Query
-          - dynamodb:Scan
-          - dynamodb:UpdateItem
-        Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.${self:provider.stage}.ddb_candidates_table}
-        Effect: Allow
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+        - Action:
+            - dynamodb:GetItem
+            - dynamodb:GetRecords
+            - dynamodb:PutItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:UpdateItem
+            - dynamodb:DescribeTable
+          Resource: arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/${self:custom.${self:provider.stage}.ddb_candidates_table}
+          Effect: Allow
 custom:
   dev:
     ddb_candidates_table: ${env:ddb_candidates_table}
+    slack:
+      SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
+      SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
+      REMINDER_CHANNEL: ${env:REMINDER_CHANNEL}
   stg:
     ddb_candidates_table: facilitator-bot-candidates
-
-package:
-  artifact: target/scala-2.13/facilitator_bot.jar
+    slack: ${ssm:/aws/reference/secretsmanager/facilitator-bot-slack}
 
 functions:
   remind_facilitator:
-    handler: facilitator_bot.CronHandler
+    handler: cron_handler.handler
+    environment:
+      SLACK_SIGNING_SECRET: ${self:custom.${self:provider.stage}.slack.SLACK_SIGNING_SECRET}
+      SLACK_BOT_TOKEN: ${self:custom.${self:provider.stage}.slack.SLACK_BOT_TOKEN}
+      REMINDER_CHANNEL: ${self:custom.${self:provider.stage}.slack.REMINDER_CHANNEL}
+      ddb_candidates_table: ${self:custom.${self:provider.stage}.ddb_candidates_table}
     events:
       - schedule:
           rate: cron(25 1 ? * MON-FRI *)
           enabled: true
   skip_command:
-    handler: facilitator_bot.CommandHandler
+    handler: command_handler.handler
+    environment:
+      SLACK_SIGNING_SECRET: ${self:custom.${self:provider.stage}.slack.SLACK_SIGNING_SECRET}
+      SLACK_BOT_TOKEN: ${self:custom.${self:provider.stage}.slack.SLACK_BOT_TOKEN}
+      REMINDER_CHANNEL: ${self:custom.${self:provider.stage}.slack.REMINDER_CHANNEL}
+      ddb_candidates_table: ${self:custom.${self:provider.stage}.ddb_candidates_table}
     events:
-    - http: POST /skip
+      - http:
+          method: POST
+          path: /skip
 resources:
   Resources:
     CandidateTable:
@@ -64,3 +80,5 @@ resources:
           SSEEnabled: true
 plugins:
   - serverless-pseudo-parameters
+  - serverless-offline
+  - serverless-plugin-typescript

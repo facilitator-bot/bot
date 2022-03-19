@@ -5,6 +5,6 @@ services:
     environment:
       SERVICES: dynamodb
     ports:
-      - "4569:4569"
+      - "4566:4566"
     expose:
-      - "4569"
+      - "4566"

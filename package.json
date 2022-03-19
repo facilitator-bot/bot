@@ -5,7 +5,21 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "serverless": "^2.31.0",
-    "serverless-pseudo-parameters": "^2.5.0"
+    "@types/node": "^17.0.21",
+    "serverless": "^3.7.1",
+    "serverless-offline": "^8.5.0",
+    "serverless-plugin-typescript": "^2.1.1",
+    "serverless-pseudo-parameters": "^2.5.0",
+    "typescript": "^4.6.2"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.10.0",
+    "dynamoose": "^2.8.5"
+  },
+  "scripts": {
+    "local": "serverless offline --noPrependStageInUrl --stage dev -f skip_command",
+    "remind-local": "serverless invoke local -f remind_facilitator --stage dev",
+    "deploy": "serverless deploy --stage stg",
+    "package": "serverless package --stage stg"
   }
 }
